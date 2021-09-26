@@ -47,16 +47,22 @@ public class Tank implements Movable {
         //新版本jdk使用这个
         //System.getProperties().put("jdk.proxy.ProxyGenerator.saveGeneratedFiles", "true");
 
-
         Tank tank = new Tank();
 
         //reflection 通过二进制字节码分析类的属性和方法
 
-        InvocationHandler invocationHandler = new LogHandler(tank);
-        Class<?> proxyClass = Proxy.getProxyClass(Tank.class.getClassLoader(), Movable.class);
+        InvocationHandler timeHandler = new TimeHandler(tank);
 
-        Movable movable = (Movable) proxyClass.getConstructor(InvocationHandler.class).newInstance(invocationHandler);
+        InvocationHandler logHandler = new LogHandler(tank);
+
+        Class<?> proxyClass = Proxy.getProxyClass(Tank.class.getClassLoader(), Movable.class);
+        Movable movable = (Movable) proxyClass.getConstructor(InvocationHandler.class).newInstance(timeHandler);
         movable.move();
+
+
+        Class<?> proxyClass2 = Proxy.getProxyClass(Tank.class.getClassLoader(), Movable.class);
+        Movable movable2 = (Movable) proxyClass2.getConstructor(InvocationHandler.class).newInstance(logHandler);
+        movable2.move();
 
 //        Movable m = (Movable)Proxy.newProxyInstance(
 //                Tank.class.getClassLoader(),
@@ -74,19 +80,41 @@ public class Tank implements Movable {
     }
 }
 
-class LogHandler implements InvocationHandler {
+class TimeHandler implements InvocationHandler {
 
-    Tank tank;
+    Movable movable;
 
-    public LogHandler(Tank tank) {
-        this.tank = tank;
+    public TimeHandler(Movable movable) {
+        this.movable = movable;
     }
     //getClass.getMethods[]
     @Override
     public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
-        System.out.println("method " + method.getName() + " start..");
-        Object o = method.invoke(tank, args);
-        System.out.println("method " + method.getName() + " end!");
+        System.out.println("TimeHandler: method " + method.getName() + " start..");
+        long start = System.currentTimeMillis();
+
+        Object o = method.invoke(movable, args);
+
+        System.out.println("TimeHandler: method " + method.getName() + " end!");
+        long end = System.currentTimeMillis();
+        System.out.println(end - start);
+        return o;
+    }
+}
+
+class LogHandler implements InvocationHandler {
+
+    Movable movable;
+
+    public LogHandler(Movable movable) {
+        this.movable = movable;
+    }
+    //getClass.getMethods[]
+    @Override
+    public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
+        System.out.println("LogHandler: method " + method.getName() + " start..");
+        Object o = method.invoke(movable, args);
+        System.out.println("LogHandler: method " + method.getName() + " end!");
         return o;
     }
 }
