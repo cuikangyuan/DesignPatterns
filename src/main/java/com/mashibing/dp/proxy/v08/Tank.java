@@ -48,6 +48,8 @@ public class Tank implements Movable {
         //System.getProperties().put("jdk.proxy.ProxyGenerator.saveGeneratedFiles", "true");
 
         Tank tank = new Tank();
+//        Class<? extends Tank> aClass = tank.getClass();
+//        Method[] declaredMethods = aClass.getDeclaredMethods();
 
         //reflection 通过二进制字节码分析类的属性和方法
 
