@@ -1,7 +1,10 @@
 package com.mashibing.dp.proxy.v08;
 
 
+import org.omg.CORBA.portable.InvokeHandler;
+
 import java.lang.reflect.InvocationHandler;
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.util.Random;
@@ -36,25 +39,46 @@ public class Tank implements Movable {
         }
     }
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws NoSuchMethodException, InvocationTargetException, InstantiationException, IllegalAccessException {
+
+        //jdk1.8及之前版本使用这个 (我的是1.8,没试过其他版本)
+        System.getProperties().put("sun.misc.ProxyGenerator.saveGeneratedFiles","true");
+
+        //新版本jdk使用这个
+        //System.getProperties().put("jdk.proxy.ProxyGenerator.saveGeneratedFiles", "true");
+
+
         Tank tank = new Tank();
 
         //reflection 通过二进制字节码分析类的属性和方法
 
-        Movable m = (Movable)Proxy.newProxyInstance(Tank.class.getClassLoader(),
-                new Class[]{Movable.class}, //tank.class.getInterfaces()
-                new LogHander(tank)
-        );
+        InvocationHandler invocationHandler = new LogHandler(tank);
+        Class<?> proxyClass = Proxy.getProxyClass(Tank.class.getClassLoader(), Movable.class);
 
-        m.move();
+        Movable movable = (Movable) proxyClass.getConstructor(InvocationHandler.class).newInstance(invocationHandler);
+        movable.move();
+
+//        Movable m = (Movable)Proxy.newProxyInstance(
+//                Tank.class.getClassLoader(),
+//                new Class[]{Movable.class}, //tank.class.getInterfaces()
+//                new LogHandler(tank)
+//        );
+
+//        Movable m = (Movable)Proxy.newProxyInstance(
+//                Tank.class.getClassLoader(),
+//                new Class[]{Movable.class}, //tank.class.getInterfaces()
+//                null
+//        );
+
+//        m.move();
     }
 }
 
-class LogHander implements InvocationHandler {
+class LogHandler implements InvocationHandler {
 
     Tank tank;
 
-    public LogHander(Tank tank) {
+    public LogHandler(Tank tank) {
         this.tank = tank;
     }
     //getClass.getMethods[]
